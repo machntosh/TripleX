@@ -6,7 +6,7 @@ export interface UserProfile {
   targetProtein: number;
   targetCarbs: number;
   targetFat: number;
-  anthropicApiKey: string;
+  groqApiKey: string;
 }
 
 export interface FoodItem {
@@ -69,5 +69,5 @@ export const DEFAULT_PROFILE: UserProfile = {
   targetProtein: 180,
   targetCarbs: 130,
   targetFat: 60,
-  anthropicApiKey: "",
+  groqApiKey: "",
 };

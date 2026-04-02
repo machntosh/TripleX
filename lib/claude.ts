@@ -1,4 +1,4 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import { ClaudeAnalysisResult, MealType } from "./types";
 
 const ANALYZE_PROMPT = `Tu es un nutritionniste expert. Analyse cette photo de repas.
@@ -27,30 +27,24 @@ export async function analyzeMealPhoto(
   mimeType: string,
   apiKey: string
 ): Promise<ClaudeAnalysisResult> {
-  const client = new Anthropic({ apiKey });
+  const client = new Groq({ apiKey });
 
-  const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+  const response = await client.chat.completions.create({
+    model: "meta-llama/llama-4-scout-17b-16e-instruct",
     max_tokens: 1024,
     messages: [
       {
         role: "user",
         content: [
           {
-            type: "image",
-            source: {
-              type: "base64",
-              media_type: mimeType as
-                | "image/jpeg"
-                | "image/png"
-                | "image/gif"
-                | "image/webp",
-              data: imageBase64,
-            },
-          },
-          {
             type: "text",
             text: ANALYZE_PROMPT,
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: `data:${mimeType};base64,${imageBase64}`,
+            },
           },
         ],
       },
@@ -58,7 +52,7 @@ export async function analyzeMealPhoto(
   });
 
   const text =
-    response.content[0].type === "text" ? response.content[0].text : "";
+    response.choices[0].message.content || "";
 
   // Extract JSON (handle possible markdown fences)
   const jsonMatch = text.match(/\{[\s\S]*\}/);

@@ -12,7 +12,7 @@ export default function ParametresPage() {
   const [saved, setSaved] = useState(false);
 
   const [form, setForm] = useState({
-    anthropicApiKey: profile.anthropicApiKey,
+    groqApiKey: profile.groqApiKey,
     targetCalories: String(profile.targetCalories),
     targetProtein: String(profile.targetProtein),
     targetCarbs: String(profile.targetCarbs),
@@ -24,7 +24,7 @@ export default function ParametresPage() {
 
   const handleSave = () => {
     updateProfile({
-      anthropicApiKey: form.anthropicApiKey.trim(),
+      groqApiKey: form.groqApiKey.trim(),
       targetCalories: Number(form.targetCalories),
       targetProtein: Number(form.targetProtein),
       targetCarbs: Number(form.targetCarbs),
@@ -62,21 +62,21 @@ export default function ParametresPage() {
         {/* API Key */}
         <section className="bg-white rounded-2xl p-4">
           <h2 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-            🤖 Clé API Anthropic
+            ⚡ Clé API Groq (Llama 4 Scout)
           </h2>
           <p className="text-xs text-slate-400 mb-3">
             Nécessaire pour l&apos;analyse IA des photos de repas.
             Créez votre clé sur{" "}
             <span className="text-teal-600 font-medium">
-              console.anthropic.com
+              console.groq.com
             </span>
           </p>
           <div className="relative">
             <input
               type={showKey ? "text" : "password"}
-              placeholder="sk-ant-api03-..."
+              placeholder="gsk_..."
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              {...f("anthropicApiKey")}
+              {...f("groqApiKey")}
             />
             <button
               type="button"
@@ -86,7 +86,7 @@ export default function ParametresPage() {
               {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-          {profile.anthropicApiKey && (
+          {profile.groqApiKey && (
             <p className="text-xs text-teal-600 mt-1.5">✓ Clé configurée</p>
           )}
         </section>

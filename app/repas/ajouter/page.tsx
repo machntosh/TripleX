@@ -37,7 +37,7 @@ export default function AjouterRepasPage() {
         body: JSON.stringify({
           imageBase64: b64,
           mimeType: mime,
-          apiKey: profile.anthropicApiKey || undefined,
+          apiKey: profile.groqApiKey || undefined,
         }),
       });
 
@@ -124,12 +124,12 @@ export default function AjouterRepasPage() {
                 <AlertCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-red-700">{error}</p>
-                  {error.includes("Clé API") && (
+                  {(error.includes("Clé API") || error.includes("API Key")) && (
                     <Link
                       href="/parametres"
                       className="text-xs text-teal-600 font-medium mt-1 block"
                     >
-                      → Configurer la clé API dans les Paramètres
+                      → Configurer la clé API Groq dans les Paramètres
                     </Link>
                   )}
                 </div>

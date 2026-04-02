@@ -14,13 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     const resolvedApiKey =
-      apiKey || process.env.ANTHROPIC_API_KEY;
+      apiKey || process.env.GROQ_API_KEY;
 
     if (!resolvedApiKey) {
       return NextResponse.json(
         {
           error:
-            "Clé API Anthropic manquante. Configurez-la dans les Paramètres.",
+            "Clé API Groq manquante. Configurez-la dans les Paramètres.",
         },
         { status: 401 }
       );
@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     const message =
       err instanceof Error ? err.message : "Erreur inconnue";
 
-    // Anthropic auth errors
+    // Groq auth errors
     if (message.includes("401") || message.includes("authentication")) {
       return NextResponse.json(
         { error: "Clé API invalide. Vérifiez vos paramètres." },
