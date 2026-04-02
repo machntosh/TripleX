@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Loader2, AlertCircle, CheckCircle2, Calendar } from "lucide-react";
 import Link from "next/link";
 import PhotoCapture from "@/components/meals/PhotoCapture";
 import MealAnalysis from "@/components/meals/MealAnalysis";
@@ -15,7 +15,11 @@ type Step = "photo" | "analyzing" | "review" | "done";
 function AjouterRepasContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const targetDate = searchParams.get("date") || getTodayString();
+
+  // Date éditable — initialisée depuis l'URL ou aujourd'hui
+  const [targetDate, setTargetDate] = useState(
+    searchParams.get("date") || getTodayString()
+  );
 
   const [step, setStep] = useState<Step>("photo");
   const [preview, setPreview] = useState<string>("");
@@ -29,7 +33,6 @@ function AjouterRepasContent() {
 
     try {
       const profile = getProfile();
-
       const res = await fetch("/api/analyze-meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -41,23 +44,18 @@ function AjouterRepasContent() {
       });
 
       const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.error || "Erreur lors de l'analyse");
-      }
+      if (!res.ok) throw new Error(data.error || "Erreur lors de l'analyse");
 
       setAnalysis(data);
       setStep("review");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur inconnue";
-      setError(msg);
+      setError(err instanceof Error ? err.message : "Erreur inconnue");
       setStep("photo");
     }
   };
 
   const handleSave = () => {
     if (!analysis) return;
-
     try {
       const now = new Date();
       const time = now.toTimeString().slice(0, 5);
@@ -78,28 +76,22 @@ function AjouterRepasContent() {
       setStep("done");
       setTimeout(() => router.push(`/repas?date=${targetDate}`), 1200);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement";
-      setError(msg);
+      setError(err instanceof Error ? err.message : "Erreur lors de l'enregistrement");
     }
   };
 
-  const isBackDate = targetDate !== getTodayString();
-
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Header */}
       <div className="bg-teal-600 text-white px-4 pt-12 pb-4 flex items-center gap-3">
         <Link href={`/repas?date=${targetDate}`} className="p-1">
           <ArrowLeft size={22} />
         </Link>
-        <div>
-          <h1 className="text-lg font-bold">Ajouter un repas</h1>
-          {isBackDate && (
-            <p className="text-teal-200 text-xs">{targetDate.split("-").reverse().join("/")}</p>
-          )}
-        </div>
+        <h1 className="text-lg font-bold">Ajouter un repas</h1>
       </div>
 
       <div className="px-4 pt-4 pb-8 space-y-4">
+
         {/* Done */}
         {step === "done" && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -130,7 +122,7 @@ function AjouterRepasContent() {
                 <AlertCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-red-700">{error}</p>
-                  {(error.includes("Clé API") || error.includes("API Key") || error.includes("Groq")) && (
+                  {(error.includes("Clé") || error.includes("API") || error.includes("Groq")) && (
                     <Link href="/parametres" className="text-xs text-teal-600 font-medium mt-1 block">
                       → Configurer la clé API Groq dans les Paramètres
                     </Link>
@@ -138,7 +130,6 @@ function AjouterRepasContent() {
                 </div>
               </div>
             )}
-
             <div className="bg-white rounded-2xl p-4">
               <p className="text-sm text-slate-500 mb-4 text-center">
                 Prenez ou choisissez une photo de votre repas.<br />
@@ -146,7 +137,6 @@ function AjouterRepasContent() {
               </p>
               <PhotoCapture onPhoto={handlePhoto} />
             </div>
-
             <button
               onClick={() => {
                 setAnalysis({ foods: [], totalCalories: 0, protein: 0, carbs: 0, fat: 0, mealType: "déjeuner", description: "" });
@@ -175,6 +165,24 @@ function AjouterRepasContent() {
               </div>
             )}
 
+            {/* Sélecteur de date — toujours visible */}
+            <div className="bg-white rounded-2xl p-4 flex items-center gap-3">
+              <Calendar size={18} className="text-teal-600 shrink-0" />
+              <div className="flex-1">
+                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wide block mb-1">
+                  Date du repas
+                </label>
+                <input
+                  type="date"
+                  value={targetDate}
+                  max={getTodayString()}
+                  onChange={(e) => setTargetDate(e.target.value)}
+                  className="w-full text-sm font-semibold text-slate-800 focus:outline-none caret-teal-500 bg-transparent"
+                />
+              </div>
+            </div>
+
+            {/* Analyse IA */}
             <div className="bg-white rounded-2xl p-4">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 rounded-full bg-teal-500" />
@@ -208,7 +216,11 @@ function AjouterRepasContent() {
 
 export default function AjouterRepasPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-teal-600" size={32} /></div>}>
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="animate-spin text-teal-600" size={32} />
+      </div>
+    }>
       <AjouterRepasContent />
     </Suspense>
   );
