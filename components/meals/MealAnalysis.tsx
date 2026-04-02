@@ -116,7 +116,9 @@ export default function MealAnalysis({ result, onChange }: Props) {
                 <span className="text-slate-700 font-medium">{food.name}</span>
                 <div className="flex gap-3 text-slate-400 text-xs">
                   <span>{food.quantity}</span>
-                  <span className="font-semibold text-slate-600">{food.calories} kcal</span>
+                  {food.calories > 0 && (
+                    <span className="font-semibold text-slate-600">{food.calories} kcal</span>
+                  )}
                 </div>
               </div>
             ))}
