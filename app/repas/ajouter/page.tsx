@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import PhotoCapture from "@/components/meals/PhotoCapture";
@@ -12,18 +12,17 @@ import { getProfile } from "@/lib/storage";
 
 type Step = "photo" | "analyzing" | "review" | "done";
 
-export default function AjouterRepasPage() {
+function AjouterRepasContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const targetDate = searchParams.get("date") || getTodayString();
+
   const [step, setStep] = useState<Step>("photo");
   const [preview, setPreview] = useState<string>("");
-  const [imageBase64, setImageBase64] = useState<string>("");
-  const [mimeType, setMimeType] = useState<string>("");
   const [analysis, setAnalysis] = useState<ClaudeAnalysisResult | null>(null);
   const [error, setError] = useState<string>("");
 
   const handlePhoto = async (b64: string, mime: string, prev: string) => {
-    setImageBase64(b64);
-    setMimeType(mime);
     setPreview(prev);
     setError("");
     setStep("analyzing");
@@ -58,39 +57,50 @@ export default function AjouterRepasPage() {
 
   const handleSave = () => {
     if (!analysis) return;
-    const now = new Date();
-    const time = now.toTimeString().slice(0, 5);
 
-    saveMeal({
-      id: generateId(),
-      date: getTodayString(),
-      time,
-      mealType: analysis.mealType,
-      photoBase64: preview,
-      description: analysis.description,
-      calories: analysis.totalCalories,
-      protein: analysis.protein,
-      carbs: analysis.carbs,
-      fat: analysis.fat,
-      foods: analysis.foods,
-    });
+    try {
+      const now = new Date();
+      const time = now.toTimeString().slice(0, 5);
 
-    setStep("done");
-    setTimeout(() => router.push("/dashboard"), 1200);
+      saveMeal({
+        id: generateId(),
+        date: targetDate,
+        time,
+        mealType: analysis.mealType,
+        description: analysis.description || "Repas",
+        calories: analysis.totalCalories || 0,
+        protein: analysis.protein || 0,
+        carbs: analysis.carbs || 0,
+        fat: analysis.fat || 0,
+        foods: analysis.foods || [],
+      });
+
+      setStep("done");
+      setTimeout(() => router.push(`/repas?date=${targetDate}`), 1200);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur lors de l'enregistrement";
+      setError(msg);
+    }
   };
+
+  const isBackDate = targetDate !== getTodayString();
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Header */}
       <div className="bg-teal-600 text-white px-4 pt-12 pb-4 flex items-center gap-3">
-        <Link href="/repas" className="p-1">
+        <Link href={`/repas?date=${targetDate}`} className="p-1">
           <ArrowLeft size={22} />
         </Link>
-        <h1 className="text-lg font-bold">Ajouter un repas</h1>
+        <div>
+          <h1 className="text-lg font-bold">Ajouter un repas</h1>
+          {isBackDate && (
+            <p className="text-teal-200 text-xs">{targetDate.split("-").reverse().join("/")}</p>
+          )}
+        </div>
       </div>
 
       <div className="px-4 pt-4 pb-8 space-y-4">
-        {/* Step: Done */}
+        {/* Done */}
         {step === "done" && (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
             <CheckCircle2 size={56} className="text-teal-500" />
@@ -98,25 +108,21 @@ export default function AjouterRepasPage() {
           </div>
         )}
 
-        {/* Step: Analyzing */}
+        {/* Analyzing */}
         {step === "analyzing" && (
           <div className="flex flex-col items-center justify-center py-16 gap-4">
             {preview && (
-              <img
-                src={preview}
-                alt="Repas"
-                className="w-48 h-48 object-cover rounded-2xl shadow-md"
-              />
+              <img src={preview} alt="Repas" className="w-48 h-48 object-cover rounded-2xl shadow-md" />
             )}
             <Loader2 size={36} className="text-teal-600 animate-spin" />
             <div className="text-center">
               <p className="font-semibold text-slate-700">Analyse en cours…</p>
-              <p className="text-sm text-slate-400">Claude Vision identifie vos aliments</p>
+              <p className="text-sm text-slate-400">Llama 4 Scout identifie vos aliments</p>
             </div>
           </div>
         )}
 
-        {/* Step: Photo */}
+        {/* Photo */}
         {step === "photo" && (
           <>
             {error && (
@@ -124,11 +130,8 @@ export default function AjouterRepasPage() {
                 <AlertCircle size={18} className="text-red-500 shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-medium text-red-700">{error}</p>
-                  {(error.includes("Clé API") || error.includes("API Key")) && (
-                    <Link
-                      href="/parametres"
-                      className="text-xs text-teal-600 font-medium mt-1 block"
-                    >
+                  {(error.includes("Clé API") || error.includes("API Key") || error.includes("Groq")) && (
+                    <Link href="/parametres" className="text-xs text-teal-600 font-medium mt-1 block">
                       → Configurer la clé API Groq dans les Paramètres
                     </Link>
                   )}
@@ -144,18 +147,9 @@ export default function AjouterRepasPage() {
               <PhotoCapture onPhoto={handlePhoto} />
             </div>
 
-            {/* Manual entry option */}
             <button
               onClick={() => {
-                setAnalysis({
-                  foods: [],
-                  totalCalories: 0,
-                  protein: 0,
-                  carbs: 0,
-                  fat: 0,
-                  mealType: "déjeuner",
-                  description: "",
-                });
+                setAnalysis({ foods: [], totalCalories: 0, protein: 0, carbs: 0, fat: 0, mealType: "déjeuner", description: "" });
                 setStep("review");
               }}
               className="w-full py-3 text-sm text-slate-500 font-medium"
@@ -165,16 +159,19 @@ export default function AjouterRepasPage() {
           </>
         )}
 
-        {/* Step: Review */}
+        {/* Review */}
         {step === "review" && analysis && (
           <>
             {preview && (
               <div className="rounded-2xl overflow-hidden shadow-sm">
-                <img
-                  src={preview}
-                  alt="Repas analysé"
-                  className="w-full h-48 object-cover"
-                />
+                <img src={preview} alt="Repas analysé" className="w-full h-48 object-cover" />
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-2xl p-3 flex items-center gap-2">
+                <AlertCircle size={16} className="text-red-500 shrink-0" />
+                <p className="text-sm text-red-700">{error}</p>
               </div>
             )}
 
@@ -190,11 +187,7 @@ export default function AjouterRepasPage() {
 
             <div className="flex gap-3">
               <button
-                onClick={() => {
-                  setStep("photo");
-                  setPreview("");
-                  setImageBase64("");
-                }}
+                onClick={() => { setStep("photo"); setPreview(""); setError(""); }}
                 className="flex-1 py-3.5 rounded-2xl border-2 border-slate-200 text-slate-600 font-semibold text-sm"
               >
                 Recommencer
@@ -210,5 +203,13 @@ export default function AjouterRepasPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function AjouterRepasPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen"><Loader2 className="animate-spin text-teal-600" size={32} /></div>}>
+      <AjouterRepasContent />
+    </Suspense>
   );
 }

@@ -44,11 +44,7 @@ export default function RepasPage() {
         </div>
         <button
           onClick={() => !isFuture && setSelectedDate((d) => addDays(d, 1))}
-          className={`p-2 rounded-xl ${
-            isFuture
-              ? "text-slate-200"
-              : "text-slate-500 active:bg-slate-100"
-          }`}
+          className={`p-2 rounded-xl ${isFuture ? "text-slate-200" : "text-slate-500 active:bg-slate-100"}`}
           disabled={isFuture}
         >
           <ChevronRight size={20} />
@@ -71,9 +67,9 @@ export default function RepasPage() {
           <div className="bg-white rounded-2xl p-10 text-center text-slate-400">
             <div className="text-5xl mb-3">🍽️</div>
             <p className="text-sm font-medium">Aucun repas ce jour</p>
-            {isToday && (
+            {!isFuture && (
               <Link
-                href="/repas/ajouter"
+                href={`/repas/ajouter?date=${selectedDate}`}
                 className="mt-3 inline-block text-teal-600 text-sm font-semibold"
               >
                 + Ajouter un repas
@@ -87,13 +83,15 @@ export default function RepasPage() {
         )}
       </div>
 
-      {/* FAB */}
-      <Link
-        href="/repas/ajouter"
-        className="fixed bottom-24 right-4 w-14 h-14 bg-teal-600 rounded-full flex items-center justify-center shadow-lg shadow-teal-200 active:scale-95 transition-transform z-40"
-      >
-        <Plus size={28} className="text-white" />
-      </Link>
+      {/* FAB — passe la date sélectionnée */}
+      {!isFuture && (
+        <Link
+          href={`/repas/ajouter?date=${selectedDate}`}
+          className="fixed bottom-24 right-4 w-14 h-14 bg-teal-600 rounded-full flex items-center justify-center shadow-lg shadow-teal-200 active:scale-95 transition-transform z-40"
+        >
+          <Plus size={28} className="text-white" />
+        </Link>
+      )}
     </div>
   );
 }
