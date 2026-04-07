@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAllMeals, useAllWorkouts, useProfile } from "@/hooks/useJournal";
 import { getDayNumber } from "@/lib/storage";
 import Header from "@/components/layout/Header";
 import CalorieChart from "@/components/progress/CalorieChart";
 import MacroChart from "@/components/progress/MacroChart";
 import { MealEntry } from "@/lib/types";
+import { FileDown, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 
 function computeDailyData(
   meals: MealEntry[],
@@ -80,6 +81,22 @@ export default function ProgresPage() {
     new Date().toISOString().split("T")[0]
   );
 
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [generating, setGenerating] = useState(false);
+
+  const handleGeneratePDF = async () => {
+    setGenerating(true);
+    try {
+      const { generateWeeklyPDF } = await import("@/lib/pdfReport");
+      await generateWeeklyPDF(meals, workouts, profile, weekOffset);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Label semaine sélectionnée
+  const weekLabel = weekOffset === 0 ? "Cette semaine" : weekOffset === -1 ? "Semaine dernière" : `Il y a ${Math.abs(weekOffset)} semaines`;
+
   return (
     <div className="pb-4">
       <Header
@@ -125,6 +142,41 @@ export default function ProgresPage() {
             </div>
             <div className="text-[10px] text-slate-400 mt-0.5">Repas enregistrés</div>
           </div>
+        </div>
+
+        {/* Rapport PDF */}
+        <div className="bg-white rounded-2xl p-4">
+          <h2 className="font-semibold text-slate-700 mb-3 text-sm">Rapport PDF hebdomadaire</h2>
+
+          {/* Sélecteur de semaine */}
+          <div className="flex items-center justify-between bg-slate-50 rounded-xl px-3 py-2 mb-3">
+            <button
+              onClick={() => setWeekOffset((w) => w - 1)}
+              className="p-1 text-slate-500 active:text-teal-600"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <span className="text-sm font-medium text-slate-700">{weekLabel}</span>
+            <button
+              onClick={() => setWeekOffset((w) => Math.min(0, w + 1))}
+              disabled={weekOffset >= 0}
+              className={`p-1 ${weekOffset >= 0 ? "text-slate-200" : "text-slate-500 active:text-teal-600"}`}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          <button
+            onClick={handleGeneratePDF}
+            disabled={generating}
+            className="w-full py-3 bg-teal-600 text-white rounded-xl font-semibold text-sm flex items-center justify-center gap-2 active:bg-teal-700 disabled:opacity-60"
+          >
+            {generating ? (
+              <><Loader2 size={18} className="animate-spin" /> Génération…</>
+            ) : (
+              <><FileDown size={18} /> Télécharger le rapport PDF</>
+            )}
+          </button>
         </div>
 
         {/* Calorie chart */}
