@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useAllMeals, useAllWorkouts, useProfile } from "@/hooks/useJournal";
 import { getDayNumber } from "@/lib/storage";
 import Header from "@/components/layout/Header";
 import CalorieChart from "@/components/progress/CalorieChart";
 import MacroChart from "@/components/progress/MacroChart";
 import { MealEntry } from "@/lib/types";
+import { ChevronLeft, ChevronRight, Download, Loader2 } from "lucide-react";
 
 function computeDailyData(
   meals: MealEntry[],
@@ -53,10 +54,27 @@ function computeDailyData(
   });
 }
 
+function getMondayOfWeek(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getWeekNumber(startDate: string, monday: Date): number {
+  const start = getMondayOfWeek(new Date(startDate));
+  const diff = Math.round((monday.getTime() - start.getTime()) / (7 * 24 * 3600 * 1000));
+  return Math.max(1, diff + 1);
+}
+
 export default function ProgresPage() {
   const { profile } = useProfile();
   const meals = useAllMeals();
   const workouts = useAllWorkouts();
+  const [weekOffset, setWeekOffset] = useState(0);
+  const [generating, setGenerating] = useState(false);
 
   const dailyData = useMemo(
     () => computeDailyData(meals, profile.startDate, profile.targetCalories),
@@ -79,6 +97,66 @@ export default function ProgresPage() {
     profile.startDate,
     new Date().toISOString().split("T")[0]
   );
+
+  const selectedMonday = useMemo(() => {
+    const monday = getMondayOfWeek(new Date());
+    monday.setDate(monday.getDate() + weekOffset * 7);
+    return monday;
+  }, [weekOffset]);
+
+  const selectedWeekNumber = useMemo(
+    () => getWeekNumber(profile.startDate, selectedMonday),
+    [profile.startDate, selectedMonday]
+  );
+
+  const selectedWeekMeals = useMemo(() => {
+    const dates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(selectedMonday);
+      d.setDate(d.getDate() + i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return meals.filter((m) => dates.includes(m.date));
+  }, [meals, selectedMonday]);
+
+  const selectedWeekWorkouts = useMemo(() => {
+    const dates: string[] = [];
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(selectedMonday);
+      d.setDate(d.getDate() + i);
+      dates.push(d.toISOString().split("T")[0]);
+    }
+    return workouts.filter((w) => dates.includes(w.date));
+  }, [workouts, selectedMonday]);
+
+  const handleDownloadPDF = async () => {
+    setGenerating(true);
+    try {
+      const { generateWeeklyPDF } = await import("@/lib/pdfReport");
+      await generateWeeklyPDF(
+        {
+          meals: selectedWeekMeals,
+          workouts: selectedWeekWorkouts,
+          startDate: selectedMonday.toISOString().split("T")[0],
+          weekNumber: selectedWeekNumber,
+        },
+        profile
+      );
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const mondayLabel = selectedMonday.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+  });
+  const sundayDate = new Date(selectedMonday);
+  sundayDate.setDate(sundayDate.getDate() + 6);
+  const sundayLabel = sundayDate.toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "short",
+  });
 
   return (
     <div className="pb-4">
@@ -198,6 +276,58 @@ export default function ProgresPage() {
               Vide
             </span>
           </div>
+        </div>
+
+        {/* PDF Report */}
+        <div className="bg-white rounded-2xl p-4">
+          <h2 className="font-semibold text-slate-700 mb-1 text-sm">
+            Rapport PDF hebdomadaire
+          </h2>
+          <p className="text-xs text-slate-400 mb-3">
+            Téléchargez le bilan complet de la semaine choisie.
+          </p>
+
+          {/* Week picker */}
+          <div className="flex items-center justify-between bg-slate-50 rounded-xl p-3 mb-3">
+            <button
+              onClick={() => setWeekOffset((o) => o - 1)}
+              className="p-1.5 rounded-lg text-slate-500 active:bg-slate-200"
+            >
+              <ChevronLeft size={18} />
+            </button>
+            <div className="text-center">
+              <div className="text-sm font-semibold text-slate-700">
+                Semaine {selectedWeekNumber}
+              </div>
+              <div className="text-xs text-slate-400">
+                {mondayLabel} – {sundayLabel}
+              </div>
+            </div>
+            <button
+              onClick={() => setWeekOffset((o) => Math.min(0, o + 1))}
+              className="p-1.5 rounded-lg text-slate-500 active:bg-slate-200 disabled:opacity-30"
+              disabled={weekOffset >= 0}
+            >
+              <ChevronRight size={18} />
+            </button>
+          </div>
+
+          <div className="text-xs text-slate-400 mb-3 text-center">
+            {selectedWeekMeals.length} repas · {selectedWeekWorkouts.length} séances
+          </div>
+
+          <button
+            onClick={handleDownloadPDF}
+            disabled={generating}
+            className="w-full py-3 rounded-xl bg-teal-600 text-white font-semibold text-sm flex items-center justify-center gap-2 active:bg-teal-700 disabled:opacity-60"
+          >
+            {generating ? (
+              <Loader2 size={18} className="animate-spin" />
+            ) : (
+              <Download size={18} />
+            )}
+            {generating ? "Génération…" : "Télécharger le rapport PDF"}
+          </button>
         </div>
       </div>
     </div>

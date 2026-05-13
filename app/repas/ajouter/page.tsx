@@ -66,7 +66,6 @@ export default function AjouterRepasPage() {
       date: getTodayString(),
       time,
       mealType: analysis.mealType,
-      photoBase64: preview,
       description: analysis.description,
       calories: analysis.totalCalories,
       protein: analysis.protein,
