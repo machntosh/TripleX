@@ -1,4 +1,4 @@
-import Groq from "groq-sdk";
+import OpenAI from "openai";
 import { ClaudeAnalysisResult, MealType } from "./types";
 
 const ANALYZE_PROMPT = `Tu es un nutritionniste expert. Analyse cette photo de repas.
@@ -9,28 +9,37 @@ Identifie tous les aliments visibles avec leurs quantités estimées, puis calcu
 Réponds UNIQUEMENT avec ce JSON (sans markdown, sans texte autour) :
 {
   "foods": [
-    {"name": "nom de l'aliment", "quantity": "quantité estimée (ex: 150g)", "calories": 0}
+    {"name": "Riz blanc cuit", "quantity": "150g", "calories": 195},
+    {"name": "Blanc de poulet grillé", "quantity": "120g", "calories": 132}
   ],
-  "totalCalories": 0,
-  "protein": 0,
-  "carbs": 0,
-  "fat": 0,
+  "totalCalories": 327,
+  "protein": 38,
+  "carbs": 40,
+  "fat": 4,
   "mealType": "déjeuner",
-  "description": "Description courte du repas en 1 phrase"
+  "description": "Riz blanc avec poulet grillé"
 }
 
 Pour mealType, utilise exactement l'une de ces valeurs : "petit-déjeuner", "déjeuner", "dîner", "collation"
-Tous les nombres doivent être des entiers (pas de décimales).`;
+Tous les nombres doivent être des entiers (pas de décimales).
+IMPORTANT : calcule vraiment les calories de chaque aliment — ne copie pas les valeurs d'exemple.`;
 
 export async function analyzeMealPhoto(
   imageBase64: string,
   mimeType: string,
   apiKey: string
 ): Promise<ClaudeAnalysisResult> {
-  const client = new Groq({ apiKey });
+  const client = new OpenAI({
+    apiKey,
+    baseURL: "https://openrouter.ai/api/v1",
+    defaultHeaders: {
+      "HTTP-Referer": "https://triple-x-six.vercel.app",
+      "X-Title": "Journal de Sèche",
+    },
+  });
 
   const response = await client.chat.completions.create({
-    model: "meta-llama/llama-4-scout-17b-16e-instruct",
+    model: "meta-llama/llama-4-scout",
     max_tokens: 1024,
     messages: [
       {
@@ -51,10 +60,8 @@ export async function analyzeMealPhoto(
     ],
   });
 
-  const text =
-    response.choices[0].message.content || "";
+  const text = response.choices[0].message.content || "";
 
-  // Extract JSON (handle possible markdown fences)
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) {
     throw new Error("Réponse IA invalide : pas de JSON trouvé");

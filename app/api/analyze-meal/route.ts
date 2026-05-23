@@ -14,13 +14,13 @@ export async function POST(request: NextRequest) {
     }
 
     const resolvedApiKey =
-      apiKey || process.env.GROQ_API_KEY;
+      apiKey || process.env.OPENROUTER_API_KEY;
 
     if (!resolvedApiKey) {
       return NextResponse.json(
         {
           error:
-            "Clé API Groq manquante. Configurez-la dans les Paramètres.",
+            "Clé API OpenRouter manquante. Configurez-la dans les Paramètres.",
         },
         { status: 401 }
       );

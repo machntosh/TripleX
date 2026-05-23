@@ -37,7 +37,7 @@ export default function AjouterRepasPage() {
         body: JSON.stringify({
           imageBase64: b64,
           mimeType: mime,
-          apiKey: profile.groqApiKey || undefined,
+          apiKey: profile.openRouterApiKey || undefined,
         }),
       });
 

@@ -12,7 +12,7 @@ export default function ParametresPage() {
   const [saved, setSaved] = useState(false);
 
   const [form, setForm] = useState({
-    groqApiKey: profile.groqApiKey,
+    openRouterApiKey: profile.openRouterApiKey,
     targetCalories: String(profile.targetCalories),
     targetProtein: String(profile.targetProtein),
     targetCarbs: String(profile.targetCarbs),
@@ -24,7 +24,7 @@ export default function ParametresPage() {
 
   const handleSave = () => {
     updateProfile({
-      groqApiKey: form.groqApiKey.trim(),
+      openRouterApiKey: form.openRouterApiKey.trim(),
       targetCalories: Number(form.targetCalories),
       targetProtein: Number(form.targetProtein),
       targetCarbs: Number(form.targetCarbs),
@@ -62,21 +62,21 @@ export default function ParametresPage() {
         {/* API Key */}
         <section className="bg-white rounded-2xl p-4">
           <h2 className="font-semibold text-slate-700 mb-3 flex items-center gap-2">
-            ⚡ Clé API Groq (Llama 4 Scout)
+            ⚡ Clé API OpenRouter
           </h2>
           <p className="text-xs text-slate-400 mb-3">
-            Nécessaire pour l&apos;analyse IA des photos de repas.
+            Nécessaire pour l&apos;analyse IA des photos de repas (Llama 4 Scout).
             Créez votre clé sur{" "}
             <span className="text-teal-600 font-medium">
-              console.groq.com
+              openrouter.ai/keys
             </span>
           </p>
           <div className="relative">
             <input
               type={showKey ? "text" : "password"}
-              placeholder="gsk_..."
+              placeholder="sk-or-..."
               className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              {...f("groqApiKey")}
+              {...f("openRouterApiKey")}
             />
             <button
               type="button"
@@ -86,7 +86,7 @@ export default function ParametresPage() {
               {showKey ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
-          {profile.groqApiKey && (
+          {profile.openRouterApiKey && (
             <p className="text-xs text-teal-600 mt-1.5">✓ Clé configurée</p>
           )}
         </section>
