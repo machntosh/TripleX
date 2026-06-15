@@ -37,12 +37,14 @@ export function useProfile() {
 
 export function useMeals(date?: string) {
   const targetDate = date || getTodayString();
-  const [meals, setMeals] = useState<MealEntry[]>([]);
+  // Lazy init reads localStorage synchronously on first render — no flash of empty state
+  const [meals, setMeals] = useState<MealEntry[]>(() => getMealsByDate(targetDate));
 
   const reload = useCallback(() => {
     setMeals(getMealsByDate(targetDate));
   }, [targetDate]);
 
+  // Only re-runs when targetDate changes (not on mount — lazy init handles that)
   useEffect(() => {
     reload();
   }, [reload]);
@@ -67,18 +69,15 @@ export function useMeals(date?: string) {
 }
 
 export function useAllMeals() {
-  const [meals, setMeals] = useState<MealEntry[]>([]);
-
-  useEffect(() => {
-    setMeals(getMeals());
-  }, []);
-
+  const [meals, setMeals] = useState<MealEntry[]>(getMeals);
   return meals;
 }
 
 export function useWorkouts(date?: string) {
   const targetDate = date || getTodayString();
-  const [workouts, setWorkouts] = useState<WorkoutEntry[]>([]);
+  const [workouts, setWorkouts] = useState<WorkoutEntry[]>(() =>
+    getWorkoutsByDate(targetDate)
+  );
 
   const reload = useCallback(() => {
     setWorkouts(getWorkoutsByDate(targetDate));
@@ -108,12 +107,7 @@ export function useWorkouts(date?: string) {
 }
 
 export function useAllWorkouts() {
-  const [workouts, setWorkouts] = useState<WorkoutEntry[]>([]);
-
-  useEffect(() => {
-    setWorkouts(getWorkouts());
-  }, []);
-
+  const [workouts, setWorkouts] = useState<WorkoutEntry[]>(getWorkouts);
   return workouts;
 }
 

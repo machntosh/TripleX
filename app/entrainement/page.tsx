@@ -6,16 +6,13 @@ import { formatDate } from "@/lib/storage";
 import Header from "@/components/layout/Header";
 import WorkoutCard from "@/components/workout/WorkoutCard";
 import { deleteWorkout, getWorkouts } from "@/lib/storage";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { WorkoutEntry } from "@/lib/types";
 
 export default function EntrainementPage() {
-  const [workouts, setWorkouts] = useState<WorkoutEntry[]>([]);
-
-  useEffect(() => {
-    const all = getWorkouts().sort((a, b) => b.date.localeCompare(a.date));
-    setWorkouts(all);
-  }, []);
+  const [workouts, setWorkouts] = useState<WorkoutEntry[]>(() =>
+    getWorkouts().sort((a, b) => b.date.localeCompare(a.date))
+  );
 
   const handleDelete = (id: string) => {
     deleteWorkout(id);

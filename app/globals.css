@@ -23,6 +23,31 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 16px);
 }
 
+/* Page entry animation — eliminates perceived nav latency */
+@keyframes fadeSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+main > * {
+  animation: fadeSlideIn 0.18s ease-out both;
+}
+
+/* Snappy active-state feedback on nav tap */
+nav a {
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.1s ease;
+}
+nav a:active {
+  opacity: 0.6;
+}
+
 /* Hide scrollbar but allow scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { getBodyEntries, deleteBodyEntry, formatDate } from "@/lib/storage";
@@ -26,12 +26,10 @@ const METRICS: { key: Metric; label: string; unit: string; color: string }[] = [
 ];
 
 export default function CorpsPage() {
-  const [entries, setEntries] = useState<BodyEntry[]>([]);
+  const [entries, setEntries] = useState<BodyEntry[]>(() =>
+    getBodyEntries().sort((a, b) => a.date.localeCompare(b.date))
+  );
   const [activeMetric, setActiveMetric] = useState<Metric>("weight");
-
-  useEffect(() => {
-    setEntries(getBodyEntries().sort((a, b) => a.date.localeCompare(b.date)));
-  }, []);
 
   const handleDelete = (id: string) => {
     deleteBodyEntry(id);
