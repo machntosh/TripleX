@@ -7,6 +7,9 @@ import Link from "next/link";
 import { saveBodyEntry, generateId, getTodayString } from "@/lib/storage";
 import ZoetouchBluetooth from "@/components/body/ZoetouchBluetooth";
 
+const bluetoothSupported =
+  typeof navigator !== "undefined" && "bluetooth" in navigator;
+
 type FormKey = "date" | "weight" | "bodyFat" | "muscleMass" | "visceralFat" | "waterPercent" | "boneMass" | "bmi";
 
 export default function AjouterCorpsPage() {
@@ -128,18 +131,20 @@ export default function AjouterCorpsPage() {
       </div>
 
       <div className="px-4 pt-4 pb-8 space-y-4">
-        {/* Bluetooth */}
-        <div className="bg-white rounded-2xl p-4 space-y-2">
-          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
-            Balance Zoetouch Bluetooth
-          </p>
-          <ZoetouchBluetooth onReading={handleBluetoothReading} />
-          {source === "bluetooth" && form.weight && (
-            <p className="text-xs text-center text-teal-600 font-semibold">
-              Données reçues — vérifiez et sauvegardez
+        {/* Bluetooth — only shown when browser supports it (Chrome Android/Desktop) */}
+        {bluetoothSupported && (
+          <div className="bg-white rounded-2xl p-4 space-y-2">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+              Balance Zoetouch Bluetooth
             </p>
-          )}
-        </div>
+            <ZoetouchBluetooth onReading={handleBluetoothReading} />
+            {source === "bluetooth" && form.weight && (
+              <p className="text-xs text-center text-teal-600 font-semibold">
+                Données reçues — vérifiez et sauvegardez
+              </p>
+            )}
+          </div>
+        )}
 
         {/* Date */}
         <div className="bg-white rounded-2xl p-4">
@@ -186,6 +191,12 @@ export default function AjouterCorpsPage() {
         >
           Enregistrer la mesure
         </button>
+
+        {!bluetoothSupported && (
+          <p className="text-center text-xs text-slate-400">
+            Sync balance Zoetouch disponible sur Chrome Android
+          </p>
+        )}
       </div>
     </div>
   );

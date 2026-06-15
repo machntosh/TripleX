@@ -217,12 +217,7 @@ export default function ZoetouchBluetooth({ onReading }: Props) {
   }, [isSupported, onReading]);
 
   if (!isSupported) {
-    return (
-      <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-50 rounded-xl px-3 py-2">
-        <BluetoothOff size={14} />
-        Web Bluetooth non supporté (Chrome Android/Desktop uniquement)
-      </div>
-    );
+    return null;
   }
 
   return (
