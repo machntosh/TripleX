@@ -5,12 +5,16 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { saveBodyEntry, generateId, getTodayString } from "@/lib/storage";
+import ZoetouchBluetooth from "@/components/body/ZoetouchBluetooth";
+
+type FormKey = "date" | "weight" | "bodyFat" | "muscleMass" | "visceralFat" | "waterPercent" | "boneMass" | "bmi";
 
 export default function AjouterCorpsPage() {
   const router = useRouter();
   const [done, setDone] = useState(false);
+  const [source, setSource] = useState<"manual" | "bluetooth">("manual");
 
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<Record<FormKey, string>>({
     date: getTodayString(),
     weight: "",
     bodyFat: "",
@@ -21,11 +25,32 @@ export default function AjouterCorpsPage() {
     bmi: "",
   });
 
-  const f = (key: keyof typeof form) => ({
+  const f = (key: FormKey) => ({
     value: form[key],
     onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
       setForm((prev) => ({ ...prev, [key]: e.target.value })),
   });
+
+  const handleBluetoothReading = (data: {
+    weight: number;
+    bodyFat?: number;
+    muscleMass?: number;
+    waterPercent?: number;
+    boneMass?: number;
+    visceralFat?: number;
+    bmi?: number;
+  }) => {
+    setSource("bluetooth");
+    setForm((prev) => ({
+      ...prev,
+      weight: data.weight != null ? String(data.weight) : prev.weight,
+      bodyFat: data.bodyFat != null ? String(Math.round(data.bodyFat * 10) / 10) : prev.bodyFat,
+      muscleMass: data.muscleMass != null ? String(Math.round(data.muscleMass * 10) / 10) : prev.muscleMass,
+      waterPercent: data.waterPercent != null ? String(Math.round(data.waterPercent * 10) / 10) : prev.waterPercent,
+      boneMass: data.boneMass != null ? String(Math.round(data.boneMass * 100) / 100) : prev.boneMass,
+      bmi: data.bmi != null ? String(Math.round(data.bmi * 10) / 10) : prev.bmi,
+    }));
+  };
 
   const handleSave = () => {
     if (!form.weight) return;
@@ -43,7 +68,7 @@ export default function AjouterCorpsPage() {
       waterPercent: form.waterPercent ? Number(form.waterPercent) : undefined,
       boneMass: form.boneMass ? Number(form.boneMass) : undefined,
       bmi: form.bmi ? Number(form.bmi) : undefined,
-      source: "manual",
+      source,
     });
 
     setDone(true);
@@ -67,7 +92,7 @@ export default function AjouterCorpsPage() {
     step = "0.1",
   }: {
     label: string;
-    fieldKey: keyof typeof form;
+    fieldKey: FormKey;
     unit: string;
     placeholder: string;
     step?: string;
@@ -84,9 +109,11 @@ export default function AjouterCorpsPage() {
           className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm pr-10 focus:outline-none focus:ring-2 focus:ring-teal-500 caret-teal-500"
           {...f(fieldKey)}
         />
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">
-          {unit}
-        </span>
+        {unit && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 font-medium">
+            {unit}
+          </span>
+        )}
       </div>
     </div>
   );
@@ -101,6 +128,19 @@ export default function AjouterCorpsPage() {
       </div>
 
       <div className="px-4 pt-4 pb-8 space-y-4">
+        {/* Bluetooth */}
+        <div className="bg-white rounded-2xl p-4 space-y-2">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">
+            Balance Zoetouch Bluetooth
+          </p>
+          <ZoetouchBluetooth onReading={handleBluetoothReading} />
+          {source === "bluetooth" && form.weight && (
+            <p className="text-xs text-center text-teal-600 font-semibold">
+              Données reçues — vérifiez et sauvegardez
+            </p>
+          )}
+        </div>
+
         {/* Date */}
         <div className="bg-white rounded-2xl p-4">
           <label className="text-xs font-semibold text-slate-500 block mb-1">
@@ -138,10 +178,6 @@ export default function AjouterCorpsPage() {
           </div>
           <Field label="IMC" fieldKey="bmi" unit="" placeholder="24.5" />
         </div>
-
-        <p className="text-center text-xs text-slate-400">
-          Intégration balance Bluetooth bientôt disponible
-        </p>
 
         <button
           onClick={handleSave}
