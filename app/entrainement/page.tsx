@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Plus } from "lucide-react";
-import { useAllWorkouts } from "@/hooks/useJournal";
+import { Plus, Wand2, Settings } from "lucide-react";
 import { formatDate } from "@/lib/storage";
 import Header from "@/components/layout/Header";
 import WorkoutCard from "@/components/workout/WorkoutCard";
-import { deleteWorkout } from "@/lib/storage";
+import { deleteWorkout, getWorkouts } from "@/lib/storage";
 import { useState, useEffect } from "react";
 import { WorkoutEntry } from "@/lib/types";
-import { getWorkouts } from "@/lib/storage";
 
 export default function EntrainementPage() {
   const [workouts, setWorkouts] = useState<WorkoutEntry[]>([]);
@@ -24,7 +22,6 @@ export default function EntrainementPage() {
     setWorkouts((prev) => prev.filter((w) => w.id !== id));
   };
 
-  // Group by date
   const grouped = workouts.reduce<Record<string, WorkoutEntry[]>>((acc, w) => {
     if (!acc[w.date]) acc[w.date] = [];
     acc[w.date].push(w);
@@ -38,9 +35,28 @@ export default function EntrainementPage() {
       <Header
         title="Entraînements"
         subtitle={`${workouts.length} séance${workouts.length !== 1 ? "s" : ""} enregistrée${workouts.length !== 1 ? "s" : ""}`}
+        right={
+          <Link href="/parametres" className="p-1 text-teal-100 active:text-white">
+            <Settings size={20} />
+          </Link>
+        }
       />
 
       <div className="px-4 pt-4 space-y-4">
+        {/* Program generator banner */}
+        <Link
+          href="/entrainement/programme"
+          className="flex items-center gap-3 bg-gradient-to-r from-teal-600 to-teal-500 text-white rounded-2xl p-4 active:opacity-90"
+        >
+          <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+            <Wand2 size={22} />
+          </div>
+          <div>
+            <p className="font-bold text-sm">Générer un programme IA</p>
+            <p className="text-teal-100 text-xs">Solo · Duo Léa · Hyrox · Selon votre équipement</p>
+          </div>
+        </Link>
+
         {sortedDates.length === 0 ? (
           <div className="bg-white rounded-2xl p-10 text-center text-slate-400">
             <div className="text-5xl mb-3">💪</div>

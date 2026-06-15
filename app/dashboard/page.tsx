@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, Dumbbell } from "lucide-react";
+import { Plus, Dumbbell, Settings } from "lucide-react";
 import { useMeals, useWorkouts, useProfile, computeDailyTotals } from "@/hooks/useJournal";
 import { getTodayString, formatDate, getDayNumber } from "@/lib/storage";
 import Header from "@/components/layout/Header";
@@ -25,6 +25,11 @@ export default function DashboardPage() {
       <Header
         title="Journal Sèche"
         subtitle={formatDate(today)}
+        right={
+          <Link href="/parametres" className="p-1 text-teal-100 active:text-white">
+            <Settings size={20} />
+          </Link>
+        }
       />
 
       <div className="pt-4 space-y-3">

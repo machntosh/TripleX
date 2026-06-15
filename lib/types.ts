@@ -31,7 +31,7 @@ export interface MealEntry {
   foods: FoodItem[];
 }
 
-export type WorkoutType = "musculation" | "cardio" | "mixte";
+export type WorkoutType = "musculation" | "cardio" | "mixte" | "hyrox";
 
 export interface WorkoutEntry {
   id: string;
@@ -61,6 +61,51 @@ export interface ClaudeAnalysisResult {
   description: string;
 }
 
+// Body composition
+
+export interface BodyEntry {
+  id: string;
+  date: string; // "YYYY-MM-DD"
+  time: string; // "HH:mm"
+  weight: number; // kg
+  bodyFat?: number; // %
+  muscleMass?: number; // kg
+  visceralFat?: number; // level 1-20
+  waterPercent?: number; // %
+  boneMass?: number; // kg
+  bmi?: number;
+  source: "manual" | "bluetooth";
+}
+
+// Training programs
+
+export interface ProgramExercise {
+  name: string;
+  sets?: number;
+  reps?: string; // "12" or "12-15" or "max"
+  duration?: string; // "30s" or "2 min"
+  rest?: string; // "60s"
+  distance?: string; // "1000m"
+  notes?: string;
+}
+
+export interface ProgramBlock {
+  title: string; // "Échauffement", "Circuit principal", "Retour au calme"
+  exercises: ProgramExercise[];
+}
+
+export interface WorkoutProgram {
+  id: string;
+  createdAt: string; // ISO
+  name: string;
+  description: string;
+  totalDuration: number; // minutes
+  type: "solo" | "duo" | "hyrox-solo" | "hyrox-duo";
+  blocks: ProgramBlock[];
+  equipment: string[];
+  savedAt?: string;
+}
+
 export const DEFAULT_PROFILE: UserProfile = {
   weight: 88.1,
   bmr: 1716,
@@ -71,3 +116,4 @@ export const DEFAULT_PROFILE: UserProfile = {
   targetFat: 60,
   openRouterApiKey: "",
 };
+

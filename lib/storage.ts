@@ -1,9 +1,11 @@
-import { UserProfile, MealEntry, WorkoutEntry, DEFAULT_PROFILE } from "./types";
+import { UserProfile, MealEntry, WorkoutEntry, BodyEntry, WorkoutProgram, DEFAULT_PROFILE } from "./types";
 
 const KEYS = {
   PROFILE: "tripleX_profile",
   MEALS: "tripleX_meals",
   WORKOUTS: "tripleX_workouts",
+  BODY: "tripleX_body",
+  PROGRAMS: "tripleX_programs",
 } as const;
 
 // --- Profile ---
@@ -91,6 +93,64 @@ export function getWorkoutsByDate(date: string): WorkoutEntry[] {
   return getWorkouts().filter((w) => w.date === date);
 }
 
+// --- Body composition ---
+
+export function getBodyEntries(): BodyEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(KEYS.BODY);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function saveBodyEntry(entry: BodyEntry): void {
+  const entries = getBodyEntries();
+  const index = entries.findIndex((e) => e.id === entry.id);
+  if (index >= 0) {
+    entries[index] = entry;
+  } else {
+    entries.push(entry);
+  }
+  localStorage.setItem(KEYS.BODY, JSON.stringify(entries));
+}
+
+export function deleteBodyEntry(id: string): void {
+  const entries = getBodyEntries().filter((e) => e.id !== id);
+  localStorage.setItem(KEYS.BODY, JSON.stringify(entries));
+}
+
+// --- Training programs ---
+
+export function getPrograms(): WorkoutProgram[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(KEYS.PROGRAMS);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
+}
+
+export function saveProgram(program: WorkoutProgram): void {
+  const programs = getPrograms();
+  const index = programs.findIndex((p) => p.id === program.id);
+  if (index >= 0) {
+    programs[index] = program;
+  } else {
+    programs.push(program);
+  }
+  localStorage.setItem(KEYS.PROGRAMS, JSON.stringify(programs));
+}
+
+export function deleteProgram(id: string): void {
+  const programs = getPrograms().filter((p) => p.id !== id);
+  localStorage.setItem(KEYS.PROGRAMS, JSON.stringify(programs));
+}
+
 // --- Export ---
 
 export function exportData(): string {
@@ -98,6 +158,8 @@ export function exportData(): string {
     profile: getProfile(),
     meals: getMeals(),
     workouts: getWorkouts(),
+    body: getBodyEntries(),
+    programs: getPrograms(),
     exportedAt: new Date().toISOString(),
   };
   return JSON.stringify(data, null, 2);

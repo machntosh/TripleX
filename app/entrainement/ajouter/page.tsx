@@ -11,6 +11,7 @@ const WORKOUT_TYPES: { value: WorkoutType; label: string; emoji: string }[] = [
   { value: "musculation", label: "Musculation", emoji: "💪" },
   { value: "cardio", label: "Cardio", emoji: "🏃" },
   { value: "mixte", label: "Mixte", emoji: "⚡" },
+  { value: "hyrox", label: "Hyrox", emoji: "🏁" },
 ];
 
 const PRESET_EXERCISES: Record<WorkoutType, string[]> = {
@@ -24,6 +25,10 @@ const PRESET_EXERCISES: Record<WorkoutType, string[]> = {
   ],
   mixte: [
     "Circuit training", "CrossFit", "Burpees", "Kettlebell", "Box jump",
+  ],
+  hyrox: [
+    "Ski Erg", "Sled Push", "Sled Pull", "Burpee Box Jump", "Rameur",
+    "Farmers Carry", "Sandbag Lunges", "Wall Ball", "Vélo Assault", "Running",
   ],
 };
 

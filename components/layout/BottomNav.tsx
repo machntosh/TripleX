@@ -6,16 +6,16 @@ import {
   LayoutDashboard,
   UtensilsCrossed,
   Dumbbell,
+  Scale,
   TrendingUp,
-  Settings,
 } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Accueil" },
   { href: "/repas", icon: UtensilsCrossed, label: "Repas" },
   { href: "/entrainement", icon: Dumbbell, label: "Sport" },
+  { href: "/corps", icon: Scale, label: "Corps" },
   { href: "/progres", icon: TrendingUp, label: "Progrès" },
-  { href: "/parametres", icon: Settings, label: "Réglages" },
 ];
 
 export default function BottomNav() {
